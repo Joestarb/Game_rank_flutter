@@ -1,0 +1,25 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "gamerank-18bd3",
+                    "appId": "1:948780151517:android:a07402cd94dbf8e9bee134",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "gamerank-18bd3",
+                    "configurations": {
+                        "android": "1:948780151517:android:a07402cd94dbf8e9bee134",
+                        "ios": "1:948780151517:ios:2a0e8b2c69df4282bee134",
+                        "macos": "1:948780151517:ios:2a0e8b2c69df4282bee134",
+                        "web": "1:948780151517:web:9bb975015cbaeea4bee134",
+                        "windows": "1:948780151517:web:8f58da963725c1e7bee134"
+                    }
+                }
+            }
+        }
+    }
+}
