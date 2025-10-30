@@ -2,6 +2,8 @@
 
     <!-- ✅ Aquí van los permisos -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Permiso para notificaciones en Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Si usas Firestore Offline, Auth con Google, etc., no necesitas permisos extras -->
     <!-- Ejemplo de otro permiso -->
     <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> -->
@@ -37,6 +39,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        
+        <!-- Canal de notificaciones por defecto para FCM -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="game_rank_reminders" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

@@ -1,8 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:game_rank/pages/login_page.dart';
+import 'package:game_rank/services/fcm_background_handler.dart';
+import 'package:game_rank/services/notification_service.dart';
 
 import 'firebase_options.dart';
 
@@ -13,14 +16,64 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    // Registrar handler de mensajes en background
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+    // Inicializar servicio de notificaciones
+    await NotificationService().initialize();
+
     runApp(const ProviderScope(child: MyApp()));
   } catch (e) {
-    print("❌ Error al conectar Firebase: $e");
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text(
+              'Error al inicializar Firebase: $e',
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );  
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // Cuando la app pasa a background, mostrar notificación de recordatorio
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      // Mostrar notificación después de un pequeño delay para asegurar que la app esté en background
+      Future.delayed(const Duration(seconds: 1), () {
+        NotificationService().showValidationReminder(pendingCount: 0);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
