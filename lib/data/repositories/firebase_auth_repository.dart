@@ -31,10 +31,14 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<UserCredential> registerWithEmailAndPassword({
     required String email,
     required String password,
+    required String nombre,
+    String rol = 'usuario',
   }) {
     return _datasource.registerWithEmailAndPassword(
       email: email,
       password: password,
+      nombre: nombre,
+      rol: rol,
     );
   }
 

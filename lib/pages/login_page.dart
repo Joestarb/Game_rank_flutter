@@ -16,6 +16,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   bool _loading = false;
   bool _isLogin = true; // true = login, false = registro
   late AnimationController _animationController;
@@ -53,6 +56,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
         await authRepository.registerWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
+          nombre: _nameController.text,
         );
       }
 
@@ -162,6 +166,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _nameController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -310,6 +316,27 @@ class _LoginPageState extends ConsumerState<LoginPage>
                               ),
                             ),
                             const SizedBox(height: 24),
+                            // Campo Nombre (solo en registro)
+                            if (!_isLogin) ...[
+                              TextFormField(
+                                controller: _nameController,
+                                textCapitalization: TextCapitalization.words,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: const InputDecoration(
+                                  labelText: 'NOMBRE',
+                                  hintText: 'Tu nombre y apellido',
+                                  prefixIcon: Icon(Icons.badge_outlined),
+                                ),
+                                validator: (v) {
+                                  if (_isLogin) return null;
+                                  if (v == null || v.trim().isEmpty) {
+                                    return 'Introduce tu nombre';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                             // Campo Email
                             TextFormField(
                               controller: _emailController,
@@ -356,6 +383,29 @@ class _LoginPageState extends ConsumerState<LoginPage>
                                 return null;
                               },
                             ),
+                            if (!_isLogin) ...[
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _confirmPasswordController,
+                                obscureText: true,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: const InputDecoration(
+                                  labelText: 'CONFIRMAR PASSWORD',
+                                  hintText: 'Repite tu contraseña',
+                                  prefixIcon: Icon(Icons.lock_outline),
+                                ),
+                                validator: (v) {
+                                  if (_isLogin) return null;
+                                  if (v == null || v.isEmpty) {
+                                    return 'Confirma la contraseña';
+                                  }
+                                  if (v != _passwordController.text) {
+                                    return 'Las contraseñas no coinciden';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
                             if (_isLogin) ...[
                               const SizedBox(height: 8),
                               Align(

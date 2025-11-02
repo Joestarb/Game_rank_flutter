@@ -19,6 +19,8 @@ abstract class AuthRepository {
   Future<UserCredential> registerWithEmailAndPassword({
     required String email,
     required String password,
+    required String nombre,
+    String rol = 'usuario',
   });
 
   /// Iniciar sesión con Google

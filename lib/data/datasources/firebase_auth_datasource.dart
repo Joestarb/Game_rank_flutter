@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -37,12 +38,31 @@ class FirebaseAuthDatasource {
   Future<UserCredential> registerWithEmailAndPassword({
     required String email,
     required String password,
+    required String nombre,
+    String rol = 'usuario',
   }) async {
     try {
-      return await _firebaseAuth.createUserWithEmailAndPassword(
+      final cred = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
+      // Crear documento en Firestore 'users/{uid}'
+      final user = cred.user;
+      if (user != null) {
+        final doc = FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid);
+        await doc.set({
+          'id': user.uid,
+          'email': user.email ?? email.trim(),
+          'nombre': nombre.trim(),
+          'rol': rol,
+          'creadoEn': DateTime.now().toUtc().toIso8601String(),
+        }, SetOptions(merge: true));
+        // Opcional: actualizar displayName en Auth
+        await user.updateDisplayName(nombre.trim());
+      }
+      return cred;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
@@ -70,7 +90,25 @@ class FirebaseAuthDatasource {
       );
 
       // 4. Iniciar sesión en Firebase con la credencial
-      return await _firebaseAuth.signInWithCredential(credential);
+      final cred = await _firebaseAuth.signInWithCredential(credential);
+      // Asegurar documento en Firestore
+      final user = cred.user;
+      if (user != null) {
+        final docRef = FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid);
+        final snap = await docRef.get();
+        if (!snap.exists) {
+          await docRef.set({
+            'id': user.uid,
+            'email': user.email ?? '',
+            'nombre': user.displayName ?? 'Usuario',
+            'rol': 'usuario',
+            'creadoEn': DateTime.now().toUtc().toIso8601String(),
+          });
+        }
+      }
+      return cred;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
