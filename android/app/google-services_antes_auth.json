@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "948780151517",
+    "project_id": "gamerank-18bd3",
+    "storage_bucket": "gamerank-18bd3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:948780151517:android:a07402cd94dbf8e9bee134",
+        "android_client_info": {
+          "package_name": "com.example.game_rank"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_7cnbvJNMbzQ8QNG30V_Ug6p82M1cV8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

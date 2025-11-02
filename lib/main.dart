@@ -1,13 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:game_rank/pages/login_page.dart';
-import 'package:game_rank/services/fcm_background_handler.dart';
+// import 'package:game_rank/services/fcm_background_handler.dart';
 import 'package:game_rank/services/notification_service.dart';
 
-import 'firebase_options.dart';
+import 'firebase_options.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,10 +18,10 @@ void main() async {
     );
 
     // Registrar handler de mensajes en background
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    // Inicializar servicio de notificaciones
-    await NotificationService().initialize();
+    // // Inicializar servicio de notificaciones
+    // await NotificationService().initialize();
 
     runApp(const ProviderScope(child: MyApp()));
   } catch (e) {
@@ -88,12 +88,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           secondary: Color(0xFFFF00FF), // Magenta neón
           tertiary: Color(0xFF39FF14), // Verde neón
           surface: Color(0xFF1A1F3A),
-          background: Color(0xFF0A0E27),
           error: Color(0xFFFF0055),
           onPrimary: Color(0xFF0A0E27),
           onSecondary: Color(0xFF0A0E27),
           onSurface: Color(0xFF00F0FF),
-          onBackground: Color(0xFFFFFFFF),
         ),
         cardTheme: CardThemeData(
           color: const Color(0xFF1A1F3A),

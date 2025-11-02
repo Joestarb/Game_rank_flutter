@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/auth_providers.dart';
 import 'main_tabs.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
+class _LoginPageState extends ConsumerState<LoginPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _loading = false;
+  bool _isLogin = true; // true = login, false = registro
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -33,13 +36,125 @@ class _LoginPageState extends State<LoginPage>
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _loading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _loading = false);
-    if (mounted) {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const MainTabs()));
+
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+
+      if (_isLogin) {
+        // Iniciar sesión
+        await authRepository.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+      } else {
+        // Registrar nuevo usuario
+        await authRepository.registerWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+      }
+
+      if (mounted) {
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const MainTabs()));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFFF0055),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  void _signInWithGoogle() async {
+    setState(() => _loading = true);
+
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+      await authRepository.signInWithGoogle();
+
+      if (mounted) {
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const MainTabs()));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFFF0055),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  void _forgotPassword() async {
+    if (_emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Introduce tu email primero'),
+          backgroundColor: Color(0xFFFF0055),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+      await authRepository.sendPasswordResetEmail(_emailController.text);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Email de recuperación enviado'),
+            backgroundColor: const Color(0xFF39FF14),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: const Color(0xFFFF0055),
+          ),
+        );
+      }
     }
   }
 
@@ -175,7 +290,7 @@ class _LoginPageState extends State<LoginPage>
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
-                              '> INICIAR SESIÓN_',
+                              _isLogin ? '> INICIAR SESIÓN_' : '> REGISTRARSE_',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -185,7 +300,9 @@ class _LoginPageState extends State<LoginPage>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Acceso para validadores del evento',
+                              _isLogin
+                                  ? 'Acceso para validadores del evento'
+                                  : 'Crear nueva cuenta de validador',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: const Color(0xFF39FF14),
@@ -233,9 +350,28 @@ class _LoginPageState extends State<LoginPage>
                                 if (v == null || v.isEmpty) {
                                   return 'Introduce la contraseña';
                                 }
+                                if (!_isLogin && v.length < 6) {
+                                  return 'La contraseña debe tener al menos 6 caracteres';
+                                }
                                 return null;
                               },
                             ),
+                            if (_isLogin) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: _forgotPassword,
+                                  child: Text(
+                                    '¿Olvidaste tu contraseña?',
+                                    style: TextStyle(
+                                      color: const Color(0xFF00F0FF),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 32),
                             // Botón de login estilo arcade
                             Container(
@@ -289,7 +425,7 @@ class _LoginPageState extends State<LoginPage>
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
-                                            'START',
+                                            _isLogin ? 'START' : 'REGISTER',
                                             style: TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
@@ -302,6 +438,92 @@ class _LoginPageState extends State<LoginPage>
                               ),
                             ),
                             const SizedBox(height: 16),
+                            // Botón de Google Sign-In
+                            Container(
+                              height: 56,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white.withOpacity(0.3),
+                                    blurRadius: 15,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: _loading ? null : _signInWithGoogle,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: Colors.black87,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.network(
+                                      'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                                      height: 24,
+                                      width: 24,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(
+                                                Icons.g_mobiledata,
+                                                size: 28,
+                                              ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Continuar con Google',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Toggle entre login y registro
+                            Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _isLogin
+                                        ? '¿No tienes cuenta?'
+                                        : '¿Ya tienes cuenta?',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: const Color(0xFF607D8B),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: _loading
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              _isLogin = !_isLogin;
+                                            });
+                                          },
+                                    child: Text(
+                                      _isLogin ? 'Regístrate' : 'Inicia sesión',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: const Color(0xFF00F0FF),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                             // Texto adicional
                             Center(
                               child: Text(

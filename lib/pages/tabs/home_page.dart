@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:game_rank/models/game_rating.dart';
 import 'package:game_rank/models/videjuego.dart';
+import 'package:game_rank/pages/game_reviews_page.dart';
 import 'package:game_rank/providers/providers.dart';
+import 'package:game_rank/providers/user_review_provider.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -21,69 +23,289 @@ class HomePage extends ConsumerWidget {
       return;
     }
 
-    int valor = 8; // por defecto 8/10
-    String comentario = '';
+    int estrellas = 0; // Sin calificación inicial
+    final comentarioController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
 
     await showDialog(
       context: context,
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: const Color(0xFF0F1629),
-          title: const Text('Calificar juego (1 - 10)'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFF00F0FF), width: 2),
+          ),
+          title: Row(
             children: [
-              StatefulBuilder(
-                builder: (context, setLocal) {
-                  return Column(
-                    children: [
-                      Slider(
-                        value: valor.toDouble(),
-                        min: 1,
-                        max: 10,
-                        divisions: 9,
-                        label: '$valor',
-                        onChanged: (v) => setLocal(() => valor = v.round()),
-                      ),
-                      TextField(
-                        onChanged: (v) => comentario = v,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                          hintText: 'Comentario (opcional)',
-                        ),
-                      ),
-                    ],
-                  );
-                },
+              const Icon(Icons.rate_review, color: Color(0xFF00F0FF), size: 28),
+              const SizedBox(width: 12),
+              const Text(
+                'Calificar Juego',
+                style: TextStyle(
+                  color: Color(0xFF00F0FF),
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
             ],
           ),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '¿Cuántas estrellas le das?',
+                    style: TextStyle(
+                      color: Color(0xFFE0E0E0),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  StatefulBuilder(
+                    builder: (context, setLocal) {
+                      return Column(
+                        children: [
+                          // Estrellas interactivas
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(5, (index) {
+                              final starValue = index + 1;
+                              return GestureDetector(
+                                onTap: () {
+                                  setLocal(() => estrellas = starValue);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  child: Icon(
+                                    estrellas >= starValue
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color: estrellas >= starValue
+                                        ? const Color(0xFFFFFF00)
+                                        : const Color(0xFF607D8B),
+                                    size: 40,
+                                    shadows: estrellas >= starValue
+                                        ? [
+                                            const Shadow(
+                                              color: Color(0xFFFFFF00),
+                                              blurRadius: 10,
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                          const SizedBox(height: 8),
+                          // Texto de calificación
+                          Text(
+                            estrellas == 0
+                                ? 'Toca para calificar'
+                                : '$estrellas ${estrellas == 1 ? "estrella" : "estrellas"}',
+                            style: TextStyle(
+                              color: estrellas == 0
+                                  ? const Color(0xFF607D8B)
+                                  : const Color(0xFFFFFF00),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          if (estrellas == 0) ...[
+                            const SizedBox(height: 8),
+                            const Text(
+                              '⚠️ Debes seleccionar al menos 1 estrella',
+                              style: TextStyle(
+                                color: Color(0xFFFF0055),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Tu comentario (obligatorio)',
+                    style: TextStyle(
+                      color: Color(0xFFE0E0E0),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: comentarioController,
+                    maxLines: 4,
+                    maxLength: 500,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText:
+                          '¿Qué te pareció el juego? Comparte tu opinión...',
+                      hintStyle: const TextStyle(
+                        color: Color(0xFF607D8B),
+                        fontSize: 12,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFF1A1F3A),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF00F0FF),
+                          width: 2,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF00F0FF),
+                          width: 2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFFF00FF),
+                          width: 2,
+                        ),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFFF0055),
+                          width: 2,
+                        ),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFFF0055),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return '⚠️ El comentario es obligatorio';
+                      }
+                      if (value.trim().length < 10) {
+                        return '⚠️ El comentario debe tener al menos 10 caracteres';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
           actions: [
             TextButton(
-              child: const Text('Cancelar'),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Color(0xFF607D8B)),
+              ),
               onPressed: () => Navigator.of(ctx).pop(),
             ),
             ElevatedButton(
-              child: const Text('Enviar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00F0FF),
+                foregroundColor: const Color(0xFF0A0E27),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text(
+                'Enviar Review',
+                style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+              ),
               onPressed: () async {
+                // Validar que haya seleccionado estrellas
+                if (estrellas == 0) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('Debes seleccionar al menos 1 estrella'),
+                      backgroundColor: Color(0xFFFF0055),
+                    ),
+                  );
+                  return;
+                }
+
+                // Validar el formulario (comentario)
+                if (!formKey.currentState!.validate()) {
+                  return;
+                }
+
                 try {
                   final repo = ref.read(gameRepositoryProvider);
+
+                  // Convertir estrellas (1-5) a calificación de 10
+                  // 1 estrella = 2/10, 2 estrellas = 4/10, etc.
+                  final calificacion10 = estrellas * 2;
+
                   await repo.submitReview(
                     gameId: gameId,
-                    calificacion10: valor,
-                    comentario: comentario.trim().isEmpty ? null : comentario,
+                    calificacion10: calificacion10,
+                    comentario: comentarioController.text.trim(),
                   );
+
                   if (context.mounted) Navigator.of(ctx).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Review enviada')),
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: Color(0xFF39FF14),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Review enviada con éxito'),
+                          ],
+                        ),
+                        backgroundColor: const Color(0xFF1A1F3A),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: const BorderSide(
+                            color: Color(0xFF39FF14),
+                            width: 2,
+                          ),
+                        ),
+                      ),
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.error, color: Color(0xFFFF0055)),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text('Error: $e')),
+                          ],
+                        ),
+                        backgroundColor: const Color(0xFF1A1F3A),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: const BorderSide(
+                            color: Color(0xFFFF0055),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    );
                   }
                 }
               },
@@ -408,60 +630,211 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Rating
+                // Rating y botones
                 Consumer(
                   builder: (context, ref, _) {
                     final ratingAsync = ref.watch(gameRatingProvider(juego.id));
+                    final userReviewAsync = ref.watch(
+                      userReviewProvider(juego.id),
+                    );
+
                     final rating =
                         ratingAsync.asData?.value ?? GameRating.empty;
+                    final userReview = userReviewAsync.asData?.value;
+                    final hasReviewed = userReview != null;
+
                     final avg = rating.averageOutOf5;
                     final count = rating.reviewsCount;
-                    return Row(
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.star,
-                          color: Color(0xFFFFFF00),
-                          size: 20,
+                        // Rating promedio
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              color: Color(0xFFFFFF00),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              avg.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFFFFF00),
+                              ),
+                            ),
+                            const Text(
+                              ' / 5.0',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF607D8B),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '($count ${count == 1 ? "voto" : "votos"})',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF607D8B),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          avg.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFFFF00),
-                          ),
+                        const SizedBox(height: 12),
+                        // Botones de acción
+                        Row(
+                          children: [
+                            // Botón ver reviews
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          GameReviewsPage(juego: juego),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.comment, size: 18),
+                                label: Text('VER REVIEWS ($count)'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF00F0FF),
+                                  side: const BorderSide(
+                                    color: Color(0xFF00F0FF),
+                                    width: 2,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Botón calificar o estado
+                            Expanded(
+                              child: hasReviewed
+                                  ? Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                          0xFF39FF14,
+                                        ).withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: const Color(0xFF39FF14),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.check_circle,
+                                            color: Color(0xFF39FF14),
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'YA VALIDASTE',
+                                            style: const TextStyle(
+                                              color: Color(0xFF39FF14),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                              letterSpacing: 1,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : ElevatedButton.icon(
+                                      onPressed: () => _mostrarDialogoCalificar(
+                                        context,
+                                        ref,
+                                        juego.id,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.rate_review,
+                                        size: 18,
+                                      ),
+                                      label: const Text('CALIFICAR'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFFF00FF,
+                                        ),
+                                        foregroundColor: const Color(
+                                          0xFF0A0E27,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 12,
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ],
                         ),
-                        const Text(
-                          ' / 5.0',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF607D8B),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '($count votos)',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF607D8B),
-                          ),
-                        ),
-                        const Spacer(),
-                        ElevatedButton.icon(
-                          onPressed: () =>
-                              _mostrarDialogoCalificar(context, ref, juego.id),
-                          icon: const Icon(Icons.rate_review, size: 18),
-                          label: const Text('CALIFICAR'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF00FF),
-                            foregroundColor: const Color(0xFF0A0E27),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                        // Mostrar calificación del usuario si ya validó
+                        if (hasReviewed) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF39FF14).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF39FF14).withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.person,
+                                  color: Color(0xFF39FF14),
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Tu calificación: ',
+                                  style: TextStyle(
+                                    color: Color(0xFF607D8B),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                ...List.generate(5, (index) {
+                                  final stars = (userReview['calificacion'] / 2)
+                                      .round();
+                                  return Icon(
+                                    index < stars
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color: index < stars
+                                        ? const Color(0xFFFFFF00)
+                                        : const Color(0xFF607D8B),
+                                    size: 16,
+                                  );
+                                }),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${(userReview['calificacion'] / 2).toStringAsFixed(1)} / 5.0',
+                                  style: const TextStyle(
+                                    color: Color(0xFFFFFF00),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
+                        ],
                       ],
                     );
                   },
