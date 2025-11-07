@@ -6,8 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:game_rank/pages/login_page.dart';
 // import 'package:game_rank/services/fcm_background_handler.dart';
 import 'package:game_rank/services/notification_service.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-import 'firebase_options.dart'; 
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,9 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    // Inicializa datos de localización para Intl (evita LocaleDataException)
+    await initializeDateFormatting('es');
 
     // Registrar handler de mensajes en background
     // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -37,7 +41,7 @@ void main() async {
           ),
         ),
       ),
-    );  
+    );
   }
 }
 

@@ -8,15 +8,17 @@ final gameReviewsProvider = StreamProvider.family<List<Review>, String>((
   ref,
   gameId,
 ) {
-  // No usamos orderBy en la consulta para ser compatibles con colecciones
-  // que usan distintos nombres de campo de fecha (timestamp | creadoEn).
-  // Ordenamos en memoria por la fecha mapeada en el modelo.
+  // Para compatibilidad con esquemas mixtos (timestamp | creadoEn),
+  // no usamos orderBy en Firestore y ordenamos en memoria por review.timestamp.
   return FirebaseFirestore.instance
       .collection('reviews')
       .where('gameId', isEqualTo: gameId)
-      .orderBy('timestamp', descending: true)
       .snapshots()
       .map((snapshot) {
-        return snapshot.docs.map((doc) => Review.fromFirestore(doc)).toList();
+        final reviews = snapshot.docs
+            .map((doc) => Review.fromFirestore(doc))
+            .toList();
+        reviews.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        return reviews;
       });
 });

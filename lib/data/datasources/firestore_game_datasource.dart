@@ -104,8 +104,13 @@ class FirestoreGameDataSource {
           if (snap.docs.isEmpty) return GameRating.empty;
           double sum = 0;
           for (final d in snap.docs) {
-            final v = (d.data()['calificacion'] as num?)?.toDouble() ?? 0;
-            sum += v;
+            final data = d.data();
+            // Tolerar calificacion | calificacion
+            final v10 =
+                (data['calificacion'] as num?)?.toDouble() ??
+                (data['calificacion'] as num?)?.toDouble() ??
+                0.0;
+            sum += v10;
           }
           final count = snap.docs.length;
           // calificacion viene 1-10; convertimos a 0-5 para estrellas

@@ -29,17 +29,31 @@ class FirestoreGameRepository implements GameRepository {
   @override
   Future<void> submitReview({
     required String gameId,
-    required int calificacion10,
+    required int calificacion,
     String? comentario,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Usuario no autenticado');
+    // Obtener perfil desde users para email/nombre fiables
+    final userDoc = await _db.collection('users').doc(user.uid).get();
+    final profile = userDoc.data();
+    final userEmail = profile?['email'] as String? ?? user.email;
+    final userName = profile?['nombre'] as String? ?? user.displayName;
 
+    // Escribimos campos duplicados para compatibilidad hacia atrás y futura
     await _db.collection('reviews').add({
       'gameId': gameId,
+      // IDs de usuario en ambos nombres
+      'userId': user.uid,
       'usuarioId': user.uid,
-      'calificacion': calificacion10,
+      // Correo del usuario para mostrar autor (si está disponible)
+      'userEmail': userEmail,
+      'userName': userName,
+      // Calificación en escala 1..10 con ambos nombres
+      'calificacion': calificacion,
       'comentario': comentario ?? '',
+      // Timestamp con ambos nombres
+      'timestamp': FieldValue.serverTimestamp(),
       'creadoEn': FieldValue.serverTimestamp(),
     });
   }

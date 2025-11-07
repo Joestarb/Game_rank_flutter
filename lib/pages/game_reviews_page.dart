@@ -5,6 +5,7 @@ import 'package:game_rank/models/review.dart';
 import 'package:game_rank/models/videjuego.dart';
 import 'package:game_rank/providers/game_reviews_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:game_rank/providers/user_profile_provider.dart';
 
 class GameReviewsPage extends ConsumerWidget {
   final Videojuego juego;
@@ -155,7 +156,7 @@ class GameReviewsPage extends ConsumerWidget {
                   itemCount: reviews.length,
                   itemBuilder: (context, index) {
                     final review = reviews[index];
-                    return _buildReviewCard(review);
+                    return _buildReviewCard(ref, review);
                   },
                 );
               },
@@ -220,9 +221,17 @@ class GameReviewsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildReviewCard(Review review) {
+  Widget _buildReviewCard(WidgetRef ref, Review review) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm', 'es');
     final formattedDate = dateFormat.format(review.timestamp);
+    final profileAsync = ref.watch(userProfileProvider(review.userId));
+    final displayName = profileAsync.when(
+      data: (p) => (p?['nombre'] as String?)?.trim().isNotEmpty == true
+          ? p!['nombre'] as String
+          : (p?['email'] as String?) ?? review.userEmail,
+      loading: () => review.userEmail,
+      error: (_, __) => review.userEmail,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -268,7 +277,7 @@ class GameReviewsPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        review.userEmail,
+                        displayName,
                         style: const TextStyle(
                           color: Color(0xFF00F0FF),
                           fontSize: 14,

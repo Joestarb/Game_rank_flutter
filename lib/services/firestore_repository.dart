@@ -121,7 +121,7 @@ class FirestoreRepository {
   // Crear review
   Future<void> submitReview({
     required String gameId,
-    required int calificacion10, // 1..10
+    required int calificacion, // 1..10
     String? comentario,
   }) async {
     final user = _auth.currentUser;
@@ -130,7 +130,7 @@ class FirestoreRepository {
     await _db.collection('reviews').add({
       'gameId': gameId,
       'usuarioId': user.uid,
-      'calificacion': calificacion10,
+      'calificacion': calificacion,
       'comentario': comentario ?? '',
       'creadoEn': FieldValue.serverTimestamp(),
     });

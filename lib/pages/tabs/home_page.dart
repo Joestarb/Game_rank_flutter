@@ -250,11 +250,11 @@ class HomePage extends ConsumerWidget {
 
                   // Convertir estrellas (1-5) a calificación de 10
                   // 1 estrella = 2/10, 2 estrellas = 4/10, etc.
-                  final calificacion10 = estrellas * 2;
+                  final calificacion = estrellas * 2;
 
                   await repo.submitReview(
                     gameId: gameId,
-                    calificacion10: calificacion10,
+                    calificacion: calificacion,
                     comentario: comentarioController.text.trim(),
                   );
 

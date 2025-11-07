@@ -70,7 +70,7 @@ final ratingAsync = ref.watch(gameRatingProvider(juego.id));
 // Enviar review
 await ref.read(gameRepositoryProvider).submitReview(
   gameId: juego.id,
-  calificacion10: 8,
+  calificacion: 8,
   comentario: 'Muy buen gameplay',
 );
 ```

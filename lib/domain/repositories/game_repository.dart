@@ -14,7 +14,7 @@ abstract class GameRepository {
   /// Enviar una review (1..10) con comentario opcional.
   Future<void> submitReview({
     required String gameId,
-    required int calificacion10,
+    required int calificacion,
     String? comentario,
   });
 }
