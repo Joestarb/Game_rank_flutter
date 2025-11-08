@@ -56,5 +56,23 @@ class FirestoreGameRepository implements GameRepository {
       'timestamp': FieldValue.serverTimestamp(),
       'creadoEn': FieldValue.serverTimestamp(),
     });
+
+    // Regla simple de validación: si el juego tiene al menos 1 review,
+    // se marca como 'aprobado'.
+    try {
+      final countSnap = await _db
+          .collection('reviews')
+          .where('gameId', isEqualTo: gameId)
+          .limit(1) // solo necesitamos saber si existe al menos una
+          .get();
+
+      if (countSnap.docs.isNotEmpty) {
+        await _db.collection('games').doc(gameId).set({
+          'estadoValidacion': 'aprobado',
+        }, SetOptions(merge: true));
+      }
+    } catch (_) {
+      // Silencioso: si falla, no bloquea el envío de la review
+    }
   }
 }

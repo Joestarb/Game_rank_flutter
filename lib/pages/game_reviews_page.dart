@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:game_rank/models/review.dart';
 import 'package:game_rank/models/videjuego.dart';
 import 'package:game_rank/providers/game_reviews_provider.dart';
-import 'package:intl/intl.dart';
 import 'package:game_rank/providers/user_profile_provider.dart';
+import 'package:intl/intl.dart';
 
 class GameReviewsPage extends ConsumerWidget {
   final Videojuego juego;
@@ -226,9 +226,15 @@ class GameReviewsPage extends ConsumerWidget {
     final formattedDate = dateFormat.format(review.timestamp);
     final profileAsync = ref.watch(userProfileProvider(review.userId));
     final displayName = profileAsync.when(
-      data: (p) => (p?['nombre'] as String?)?.trim().isNotEmpty == true
-          ? p!['nombre'] as String
-          : (p?['email'] as String?) ?? review.userEmail,
+      data: (p) {
+        final rawNombre = p?['nombre'];
+        final nombre = rawNombre is String ? rawNombre.trim() : '';
+        if (nombre.isNotEmpty) return nombre;
+
+        final rawEmail = p?['email'];
+        final email = rawEmail is String ? rawEmail : null;
+        return email ?? review.userEmail;
+      },
       loading: () => review.userEmail,
       error: (_, __) => review.userEmail,
     );

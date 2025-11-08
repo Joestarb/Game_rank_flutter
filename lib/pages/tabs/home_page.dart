@@ -356,6 +356,39 @@ class HomePage extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 16),
+              // Buscador
+              TextField(
+                onChanged: (v) =>
+                    ref.read(searchQueryProvider.notifier).setQuery(v.trim()),
+                decoration: InputDecoration(
+                  hintText: 'Buscar por nombre, desarrollador o género...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: const Color(0xFF0F1629),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF00F0FF),
+                      width: 2,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF00F0FF),
+                      width: 2,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFFF00FF),
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -376,6 +409,11 @@ class HomePage extends ConsumerWidget {
           child: gamesAsync.when(
             data: (juegos) {
               // Filtrar por estado si corresponde
+              final filtroTexto = ref
+                  .watch(searchQueryProvider)
+                  .toLowerCase()
+                  .trim();
+
               final filtrados = () {
                 if (filtroSeleccionado == 'Pendientes') {
                   return juegos
@@ -393,7 +431,19 @@ class HomePage extends ConsumerWidget {
                 return juegos;
               }();
 
-              if (filtrados.isEmpty) {
+              // Filtro por texto
+              final buscados = filtroTexto.isEmpty
+                  ? filtrados
+                  : filtrados.where((j) {
+                      final nombre = j.nombre.toLowerCase();
+                      final dev = j.desarrollador.toLowerCase();
+                      final genero = j.generoTexto.toLowerCase();
+                      return nombre.contains(filtroTexto) ||
+                          dev.contains(filtroTexto) ||
+                          genero.contains(filtroTexto);
+                    }).toList();
+
+              if (buscados.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -405,7 +455,7 @@ class HomePage extends ConsumerWidget {
                       ),
                       SizedBox(height: 16),
                       Text(
-                        'No hay juegos en esta categoría',
+                        'No hay resultados con los filtros actuales',
                         style: TextStyle(
                           color: Color(0xFF607D8B),
                           fontSize: 16,
@@ -418,9 +468,9 @@ class HomePage extends ConsumerWidget {
 
               return ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: filtrados.length,
+                itemCount: buscados.length,
                 itemBuilder: (context, index) {
-                  final juego = filtrados[index];
+                  final juego = buscados[index];
                   return _buildGameCard(ref, juego);
                 },
               );
